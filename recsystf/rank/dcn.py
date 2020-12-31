@@ -24,16 +24,16 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                  dnn_use_bn=False,
 
                  sample_weight_column=None,
-                 optimizer_name='Adam',
+                 optimizer_name="Adam",
                  learning_rate=0.01,
                  ):
 
         def custom_model_fn(features, labels, mode, params=None, config=None):
             net = tf.feature_column.input_layer(features, feature_columns=feature_columns)
             tf.logging.info(
-                '%s DeepAndCrossNetworkEstimator custom_model_fn, net.shape:%s' %
+                "%s DeepAndCrossNetworkEstimator custom_model_fn, net.shape:%s" %
                 (
-                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     net.shape
                 )
             )
@@ -61,7 +61,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                     tf.Variable(
                         initial_value=tf.truncated_normal([net_dim, 1]),
                         trainable=True,
-                        name='kernel' + str(i),
+                        name="kernel" + str(i),
                     )
                     for i in range(cross_layer_size)
                 ]
@@ -69,7 +69,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                     tf.Variable(
                         initial_value=tf.zeros([net_dim, 1]),
                         trainable=True,
-                        name='bias' + str(i),
+                        name="bias" + str(i),
                     )
                     for i in range(cross_layer_size)
                 ]
@@ -97,9 +97,9 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 raise NotImplementedError
             logits = tf.reshape(logits, (-1, ))
             tf.logging.info(
-                '%s DeepAndCrossNetworkEstimator custom_model_fn, logits.shape:%s' %
+                "%s DeepAndCrossNetworkEstimator custom_model_fn, logits.shape:%s" %
                 (
-                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     logits.shape
                 )
             )
@@ -108,7 +108,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(
                     mode=mode,
-                    predictions={'predictions': predictions},
+                    predictions={"predictions": predictions},
                 )
 
             if sample_weight_column:
@@ -124,7 +124,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 )
 
             eval_metric_ops = {
-                'auc': tf.metrics.auc(labels, predictions),
+                "auc": tf.metrics.auc(labels, predictions),
             }
             if mode == tf.estimator.ModeKeys.EVAL:
                 return tf.estimator.EstimatorSpec(
@@ -154,5 +154,5 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
             warm_start_from=warm_start_from,
         )
         tf.logging.info(
-            '[%s] DeepAndCrossNetworkEstimator init' % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+            "[%s] DeepAndCrossNetworkEstimator init" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         )
