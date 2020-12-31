@@ -7,6 +7,7 @@ import time
 from typing import List
 import tensorflow as tf
 from recsystf.layers.dnn import DNN, DNNConfig
+from tensorflow.python.estimator.canned import optimizers
 
 
 class MMoEEstimator(tf.estimator.Estimator):
@@ -19,7 +20,11 @@ class MMoEEstimator(tf.estimator.Estimator):
                  dnn_feature_columns=None,
                  task_names=None,
                  export_dnn_configs: List[DNNConfig] = None,
+
+                 optimizer_name="Adam",
+                 learning_rate=0.01,
                  ):
+        assert 0.0 < learning_rate < 1.0
         assert dnn_feature_columns and export_dnn_configs and task_names
         expert_num = len(export_dnn_configs)
         task_num = len(task_names)
@@ -106,6 +111,19 @@ class MMoEEstimator(tf.estimator.Estimator):
                     loss=all_loss,
                     eval_metric_ops=eval_metric_ops,
                 )
+
+            assert mode == tf.estimator.ModeKeys.TRAIN
+            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate, )
+            train_op = optimizer_instance.minimize(
+                all_loss,
+                global_step=tf.train.get_global_step(),
+            )
+            return tf.estimator.EstimatorSpec(
+                mode=mode,
+                loss=all_loss,
+                train_op=train_op,
+                eval_metric_ops=eval_metric_ops,
+            )
 
         super().__init__(
             model_fn=custom_model_fn,
