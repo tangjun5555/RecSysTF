@@ -23,7 +23,7 @@ class ESSMEstimator(tf.estimator.Estimator):
                  dnn_dropout=None,
                  dnn_use_bn=None,
 
-                 optimizer_name="Adagrad",
+                 optimizer_name="Adam",
                  learning_rate=0.01,
                  ):
         def custom_model_fn(features, labels, mode, params, config=None):
