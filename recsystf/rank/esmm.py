@@ -16,9 +16,11 @@ class ESSMEstimator(tf.estimator.Estimator):
                  params=None,
                  warm_start_from=None,
 
+                 ctr_column_name="ctr_label",
+                 ctcvr_column_name="ctcvr_label",
                  dnn_feature_columns=None,
 
-                 dnn_hidden_units=None,
+                 dnn_hidden_units=(300, 200, 100),
                  dnn_activation_fn=tf.nn.relu,
                  dnn_dropout=None,
                  dnn_use_bn=None,
@@ -29,28 +31,31 @@ class ESSMEstimator(tf.estimator.Estimator):
         def custom_model_fn(features, labels, mode, params, config=None):
             net = tf.feature_column.input_layer(features, feature_columns=dnn_feature_columns)
             tf.logging.info(
-                '%s ESSMEstimator custom_model_fn, net.shape:%s' %
+                "%s ESSMEstimator custom_model_fn, net.shape:%s" %
                 (
-                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     net.shape
                 )
             )
 
-            assert dnn_hidden_units[-1] == 1, 'dnn_hidden_units[-1] must be 1'
-            ctr_model = DNN("ctr", hidden_units=dnn_hidden_units, activation=dnn_activation_fn,
+            ctr_model = DNN("CTR", hidden_units=dnn_hidden_units, activation=dnn_activation_fn,
                             dropout_ratio=dnn_dropout, use_bn=dnn_use_bn,
                             is_training=mode == tf.estimator.ModeKeys.TRAIN,
                             )
-            ctcvr_model = DNN("ctcvr", hidden_units=dnn_hidden_units, activation=dnn_activation_fn,
+            ctcvr_model = DNN("CTCVR", hidden_units=dnn_hidden_units, activation=dnn_activation_fn,
                               dropout_ratio=dnn_dropout, use_bn=dnn_use_bn,
                               is_training=mode == tf.estimator.ModeKeys.TRAIN,
                               )
 
             ctr_logits = ctr_model(net)
+            if dnn_hidden_units[-1] != 1:
+                ctr_logits = tf.layers.dense(ctr_logits, 1)
             ctr_logits = tf.reshape(ctr_logits, (-1,))
             ctr = tf.sigmoid(ctr_logits, name="CTR")
 
             ctcvr_logits = ctcvr_model(net)
+            if dnn_hidden_units[-1] != 1:
+                ctcvr_logits = tf.layers.dense(ctcvr_logits, 1)
             ctcvr_logits = tf.reshape(ctcvr_logits, (-1,))
             ctcvr = tf.sigmoid(ctcvr_logits, name="CTCVR")
 
@@ -64,15 +69,15 @@ class ESSMEstimator(tf.estimator.Estimator):
                 }
                 return tf.estimator.EstimatorSpec(mode, predictions=predictions, export_outputs=export_outputs)
 
-            ctr_label = labels["ctr_label"]
-            ctcvr_label = labels["ctcvr_label"]
+            ctr_label = labels[ctr_column_name]
+            ctcvr_label = labels[ctcvr_column_name]
             ctr_loss = tf.reduce_mean(
                 tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(ctr_label, tf.float32), logits=ctr_logits),
-                name="ctr_loss",
+                name="ctr_logloss",
             )
             ctcvr_loss = tf.reduce_mean(
                 tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(ctcvr_label, tf.float32), logits=ctr_logits),
-                name="ctcvr_loss",
+                name="ctcvr_logloss",
             )
             all_loss = tf.add(ctr_loss, ctcvr_loss, name="all_loss")
 
@@ -109,5 +114,5 @@ class ESSMEstimator(tf.estimator.Estimator):
         )
         tf.logging.info(
             "[%s] ESSMEstimator:%s init" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                                str(self.__class__.__name__)),
+                                            str(self.__class__.__name__)),
         )
