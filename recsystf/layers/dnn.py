@@ -14,6 +14,9 @@ DNNConfig = namedtuple(
 
 
 class DNN(object):
+    """
+    Multi-Layer Fully Connected Layer
+    """
     def __init__(self, name, hidden_units, activation=tf.nn.relu,
                  dropout_ratio=None, use_bn=False,
                  is_training=False):
