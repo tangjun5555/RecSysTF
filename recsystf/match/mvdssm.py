@@ -8,6 +8,9 @@ import tensorflow as tf
 from recsystf.utils.normalization_ops_util import l2_norm
 from tensorflow.python.estimator.canned import optimizers
 
+if tf.__version__ >= '2.0':
+  tf = tf.compat.v1
+
 
 class MVDSSMEstimator(tf.estimator.Estimator):
     def __init__(self,

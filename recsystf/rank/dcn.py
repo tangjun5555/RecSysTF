@@ -7,6 +7,9 @@ import time
 import tensorflow as tf
 from tensorflow.python.estimator.canned import optimizers
 
+if tf.__version__ >= '2.0':
+    tf = tf.compat.v1
+
 
 class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
     def __init__(self,
@@ -95,7 +98,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 logits = tf.layers.dense(cross_out, 1, activation=None, use_bias=True)
             else:
                 raise NotImplementedError
-            logits = tf.reshape(logits, (-1, ))
+            logits = tf.reshape(logits, (-1,))
             tf.logging.info(
                 "%s DeepAndCrossNetworkEstimator custom_model_fn, logits.shape:%s" %
                 (

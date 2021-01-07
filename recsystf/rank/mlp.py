@@ -6,6 +6,9 @@
 import time
 import tensorflow as tf
 
+if tf.__version__ >= '2.0':
+    tf = tf.compat.v1
+
 
 class MLPEstimator(tf.estimator.DNNLinearCombinedClassifier):
     def __init__(self,

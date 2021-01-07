@@ -10,6 +10,9 @@ import tensorflow as tf
 from recsystf.utils.variable_util import get_embedding_variable
 from tensorflow.python.estimator.canned import optimizers
 
+if tf.__version__ >= '2.0':
+    tf = tf.compat.v1
+
 AttentionSequenceFeature = namedtuple(
     typename="AttentionSequenceFeature",
     field_names=["group_name", "query_name", "seq_name", "vocab_size", "embedding_size"],

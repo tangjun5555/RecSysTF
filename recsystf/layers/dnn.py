@@ -6,6 +6,9 @@
 import tensorflow as tf
 from collections import namedtuple
 
+if tf.__version__ >= '2.0':
+  tf = tf.compat.v1
+
 
 DNNConfig = namedtuple(
     typename="DNNConfig",
