@@ -4,9 +4,10 @@
 # desc:
 
 import time
+import logging
 import tensorflow as tf
 
-if tf.__version__ >= '2.0':
+if tf.__version__ >= "2.0":
     tf = tf.compat.v1
 
 
@@ -38,13 +39,12 @@ class MLPEstimator(tf.estimator.DNNLinearCombinedClassifier):
                  n_classes=2,
                  weight_column=weight_column,
                  label_vocabulary=None,
-                 input_layer_partitioner=None,
                  config=config,
                  warm_start_from=warm_start_from,
                  loss_reduction=tf.losses.Reduction.MEAN,
                  batch_norm=batch_norm,
                  linear_sparse_combiner="sum",
         )
-        tf.logging.info(
+        logging.info(
             "[%s] MLPEstimator init" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         )
