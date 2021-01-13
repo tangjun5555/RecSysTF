@@ -6,6 +6,9 @@
 import math
 import tensorflow as tf
 
+if tf.__version__ >= "2.0":
+    tf = tf.compat.v1
+
 
 def get_embedding_variable(scope, name, vocab_size, embed_size):
     """
