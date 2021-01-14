@@ -6,13 +6,12 @@
 import tensorflow as tf
 from collections import namedtuple
 
-if tf.__version__ >= '2.0':
-  tf = tf.compat.v1
-
+if tf.__version__ >= "2.0":
+    tf = tf.compat.v1
 
 DNNConfig = namedtuple(
     typename="DNNConfig",
-    field_names=["name", "hidden_units", "activation", "dropout_ratio", "use_bn", "is_training"],
+    field_names=["name", "hidden_units", "use_bias", "activation", "dropout_ratio", "use_bn", "is_training"],
 )
 
 
@@ -20,11 +19,16 @@ class DNN(object):
     """
     Multi-Layer Fully Connected Layer
     """
-    def __init__(self, name, hidden_units, activation=tf.nn.relu,
-                 dropout_ratio=None, use_bn=False,
-                 is_training=False):
+
+    def __init__(self, name, hidden_units,
+                 use_bias=True,
+                 activation=tf.nn.relu,
+                 dropout_ratio=None,
+                 use_bn=False, is_training=False,
+                 ):
         self.name = name
         self.hidden_units = hidden_units
+        self.use_bias = use_bias
         self.activation = activation
         self.dropout_ratio = dropout_ratio
         self.use_bn = use_bn
@@ -35,7 +39,8 @@ class DNN(object):
             deep_fea = tf.layers.dense(
                 inputs=deep_fea,
                 units=unit,
-                name='%s/dnn_%d' % (self.name, i),
+                use_bias=self.use_bias,
+                name="%s/dnn_%d" % (self.name, i),
             )
 
             if self.use_bn:
@@ -43,25 +48,25 @@ class DNN(object):
                     deep_fea,
                     training=self.is_training,
                     trainable=True,
-                    name='%s/dnn_%d/bn' % (self.name, i),
+                    name="%s/dnn_%d/bn" % (self.name, i),
                 )
 
             if self.activation:
-                deep_fea = self.activation(deep_fea, name='%s/dnn_%d/activation' % (self.name, i))
+                deep_fea = self.activation(deep_fea, name="%s/dnn_%d/activation" % (self.name, i))
 
             if self.is_training and self.dropout_ratio and isinstance(self.dropout_ratio, float):
-                assert 0.0 < self.dropout_ratio < 1.0, 'invalid dropout_ratio: %.3f' % self.dropout_ratio
+                assert 0.0 < self.dropout_ratio < 1.0, "invalid dropout_ratio: %.3f" % self.dropout_ratio
                 deep_fea = tf.nn.dropout(
                     deep_fea,
                     keep_prob=1 - self.dropout_ratio,
-                    name='%s/%d/dropout' % (self.name, i),
+                    name="%s/%d/dropout" % (self.name, i),
                 )
             if self.is_training and self.dropout_ratio and isinstance(self.dropout_ratio, list):
-                assert self.dropout_ratio[i] < 1, 'invalid dropout_ratio: %.3f' % self.dropout_ratio[i]
+                assert self.dropout_ratio[i] < 1, "invalid dropout_ratio: %.3f" % self.dropout_ratio[i]
                 deep_fea = tf.nn.dropout(
                     deep_fea,
                     keep_prob=1 - self.dropout_ratio[i],
-                    name='%s/%d/dropout' % (self.name, i),
+                    name="%s/%d/dropout" % (self.name, i),
                 )
 
         return deep_fea
