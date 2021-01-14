@@ -7,6 +7,7 @@ import time
 import logging
 import tensorflow as tf
 from tensorflow.python.estimator.canned import optimizers
+from recsystf.layers.dnn import DNN
 
 if tf.__version__ >= "2.0":
     tf = tf.compat.v1
@@ -18,16 +19,16 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                  config=None,
                  warm_start_from=None,
 
+                 weight_column=None,
                  feature_columns=None,
 
-                 cross_layer_size=3,
+                 cross_network_layer_size=3,
 
-                 dnn_hidden_units=(300, 200, 100),
-                 dnn_activation_fn=tf.nn.relu,
-                 dnn_dropout_rate=None,
-                 dnn_use_bn=False,
+                 dense_network_hidden_units=(128, 64, 32),
+                 dense_network_activation_fn=tf.nn.relu,
+                 dense_network_dropout_rate=None,
+                 dense_network_use_bn=False,
 
-                 sample_weight_column=None,
                  optimizer_name="Adam",
                  learning_rate=0.01,
                  ):
@@ -43,22 +44,17 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
             )
             net_dim = int(net.shape[1])
 
-            def compute_deep_out(input_value):
-                output_value = input_value
-                for units in dnn_hidden_units:
-                    if dnn_dropout_rate is not None and dnn_dropout_rate > 0.0:
-                        output_value = tf.layers.dense(output_value, units=units, activation=dnn_activation_fn,
-                                                       use_bias=True)
-                        output_value = tf.layers.dropout(output_value, dnn_dropout_rate,
-                                                         training=(mode == tf.estimator.ModeKeys.TRAIN))
-                    elif dnn_use_bn:
-                        output_value = tf.layers.dense(output_value, units=units, activation=None, use_bias=False)
-                        output_value = tf.nn.relu(
-                            tf.layers.batch_normalization(output_value, training=(mode == tf.estimator.ModeKeys.TRAIN)))
-                    else:
-                        output_value = tf.layers.dense(output_value, units=units, activation=dnn_activation_fn,
-                                                       use_bias=True)
-                return output_value
+            def compute_dense_out(input_value):
+                dense_dnn = DNN(
+                    name="dense",
+                    hidden_units=dense_network_hidden_units,
+                    use_bias=True,
+                    activation=dense_network_activation_fn,
+                    dropout_ratio=dense_network_dropout_rate,
+                    use_bn=dense_network_use_bn,
+                    is_training=mode == tf.estimator.ModeKeys.TRAIN,
+                )
+                return dense_dnn(input_value)
 
             def compute_cross_out(input_value):
                 kernels = [
@@ -67,7 +63,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                         trainable=True,
                         name="kernel" + str(i),
                     )
-                    for i in range(cross_layer_size)
+                    for i in range(cross_network_layer_size)
                 ]
                 bias = [
                     tf.Variable(
@@ -75,26 +71,29 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                         trainable=True,
                         name="bias" + str(i),
                     )
-                    for i in range(cross_layer_size)
+                    for i in range(cross_network_layer_size)
                 ]
                 x_0 = tf.expand_dims(input_value, axis=2)
                 x_l = x_0
-                for i in range(cross_layer_size):
+                for i in range(cross_network_layer_size):
                     xl_w = tf.tensordot(x_l, kernels[i], axes=(1, 0))
                     dot_ = tf.matmul(x_0, xl_w)
                     x_l = dot_ + bias[i] + x_l
                 x_l = tf.squeeze(x_l, axis=2)
                 return x_l
 
-            if len(dnn_hidden_units) > 0 and cross_layer_size > 0:  # Deep & Cross
-                deep_out = compute_deep_out(net)
+            # Deep & Cross
+            if dense_network_hidden_units and cross_network_layer_size:
+                deep_out = compute_dense_out(net)
                 cross_out = compute_cross_out(net)
                 stack_out = tf.concat([deep_out, cross_out], axis=1)
                 logits = tf.layers.dense(stack_out, 1, activation=None, use_bias=True)
-            elif len(dnn_hidden_units) > 0:  # Only Deep
-                deep_out = compute_deep_out(net)
+            # Only Deep
+            elif dense_network_hidden_units:
+                deep_out = compute_dense_out(net)
                 logits = tf.layers.dense(deep_out, 1, activation=None, use_bias=True)
-            elif cross_layer_size > 0:  # Only Cross
+            # Only Cross
+            elif cross_network_layer_size:
                 cross_out = compute_cross_out(net)
                 logits = tf.layers.dense(cross_out, 1, activation=None, use_bias=True)
             else:
@@ -115,11 +114,11 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                     predictions={"predictions": predictions},
                 )
 
-            if sample_weight_column:
+            if weight_column:
                 loss = tf.losses.log_loss(
                     labels=tf.cast(labels, tf.float32),
                     predictions=predictions,
-                    weights=features[sample_weight_column],
+                    weights=features[weight_column],
                 )
             else:
                 loss = tf.losses.log_loss(
