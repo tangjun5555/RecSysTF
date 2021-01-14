@@ -140,8 +140,10 @@ class SelfAttention(object):
         attention_outputs = []
         for i in range(seq_max_length):
             query_embed = tf.slice(seq_embed, [0, i, 0], [-1, 1, -1])
-            normal_attention = NormalAttention("%s_query_%d" % (self.name, i),
-                                               attention_function=self.attention_function)
+            normal_attention = NormalAttention(
+                name="%s_attention_%d" % (self.name, i),
+                attention_function=self.attention_function
+            )
             attention_outputs.append(normal_attention(query_embed, seq_embed, seq_real_length))
         attention_outputs = tf.stack(attention_outputs, axis=1)
         return attention_outputs
