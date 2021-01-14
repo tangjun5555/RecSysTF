@@ -15,5 +15,5 @@ def l2_norm(input_net):
     :param input_net:
     :return:
     """
-    norm = tf.norm(input_net, axis=1, keepdims=True)
+    norm = tf.norm(input_net, axis=-1, keepdims=True)
     return tf.python.math_ops.div(input_net, tf.maximum(norm, 1e-12))
