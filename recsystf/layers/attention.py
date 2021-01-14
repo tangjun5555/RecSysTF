@@ -44,7 +44,7 @@ def scaled_dot_product_attention_function(query_embed, seq_embed):
 
     attention_score = tf.multiply(seq_embed, query_embed)
     attention_score = tf.reduce_sum(attention_score, axis=2, keepdims=False)
-    attention_score = attention_score / math.sqrt(seq_max_length)
+    attention_score = attention_score / math.sqrt(embed_size)
 
     return tf.reshape(attention_score, [-1, 1, seq_max_length])
 
@@ -128,18 +128,40 @@ class NormalAttention(object):
 
 class SelfAttention(object):
     def __init__(self, name):
-        pass
+        self.name = name
+        self.attention_function = "scaled_dot_product"
 
     def __call__(self, seq_embed, seq_real_length):
-        pass
+        """
+        TODO 使用矩阵乘法高效计算
+        :param seq_embed [B, T, H], 用户行为序列embedding矩阵
+        """
+        seq_max_length = seq_embed.get_shape().as_list()[1]
+        attention_outputs = []
+        for i in range(seq_max_length):
+            query_embed = tf.slice(seq_embed, [0, i, 0], [-1, 1, -1])
+            normal_attention = NormalAttention("%s_query_%d" % (self.name, i),
+                                               attention_function=self.attention_function)
+            attention_outputs.append(normal_attention(query_embed, seq_embed, seq_real_length))
+        attention_outputs = tf.stack(attention_outputs, axis=1)
+        return attention_outputs
 
 
 class MultiHeadAttention(object):
     """
     多个 Self-Attention 的组合
     """
+
     def __init__(self, name, head_num=4):
-        pass
+        self.name = name
+        self.head_num = head_num
 
     def __call__(self, seq_embed, seq_real_length):
-        pass
+        attention_outputs = []
+        for i in range(self.head_num):
+            self_attention = SelfAttention(name="%s_self_att_%d" % (self.name, i))
+            attention_outputs.append(
+                self_attention(seq_embed, seq_real_length)
+            )
+        attention_outputs = tf.concat(attention_outputs, axis=2)
+        return attention_outputs
