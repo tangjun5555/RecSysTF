@@ -3,7 +3,6 @@
 # time: 2020/12/10 3:47 下午
 # desc:
 
-import time
 import logging
 import tensorflow as tf
 from tensorflow.python.estimator.canned import optimizers
@@ -36,9 +35,8 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
         def custom_model_fn(features, labels, mode, params=None, config=None):
             net = tf.feature_column.input_layer(features, feature_columns=feature_columns)
             logging.info(
-                "%s DeepAndCrossNetworkEstimator custom_model_fn, net.shape:%s" %
+                "DeepAndCrossNetworkEstimator custom_model_fn, net.shape:%s" %
                 (
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     net.shape
                 )
             )
@@ -100,9 +98,8 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 raise NotImplementedError
             logits = tf.reshape(logits, (-1,))
             logging.info(
-                "%s DeepAndCrossNetworkEstimator custom_model_fn, logits.shape:%s" %
+                "DeepAndCrossNetworkEstimator custom_model_fn, logits.shape:%s" %
                 (
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     logits.shape
                 )
             )
@@ -156,6 +153,4 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
             params=None,
             warm_start_from=warm_start_from,
         )
-        logging.info(
-            "[%s] DeepAndCrossNetworkEstimator init" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        )
+        logging.info("DeepAndCrossNetworkEstimator init")
