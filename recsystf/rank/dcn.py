@@ -116,13 +116,11 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                     labels=tf.cast(labels, tf.float32),
                     predictions=predictions,
                     weights=features[weight_column],
-                    reduction=tf.losses.Reduction.MEAN,
                 )
             else:
                 loss = tf.losses.log_loss(
                     labels=tf.cast(labels, tf.float32),
                     predictions=predictions,
-                    reduction=tf.losses.Reduction.MEAN,
                 )
 
             eval_metric_ops = {
