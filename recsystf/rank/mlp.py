@@ -20,7 +20,7 @@ class MLPEstimator(tf.estimator.DNNLinearCombinedClassifier):
                  weight_column=None,
 
                  dnn_feature_columns=None,
-                 dnn_optimizer="Adam",
+                 dnn_optimizer="SGD",
                  dnn_hidden_units=None,
                  dnn_activation_fn=tf.nn.relu,
                  dnn_dropout=None,
@@ -29,8 +29,6 @@ class MLPEstimator(tf.estimator.DNNLinearCombinedClassifier):
                  ):
         super().__init__(
                  model_dir=model_dir,
-                 linear_feature_columns=None,
-                 linear_optimizer="Ftrl",
                  dnn_feature_columns=dnn_feature_columns,
                  dnn_optimizer=dnn_optimizer,
                  dnn_hidden_units=dnn_hidden_units,
@@ -38,12 +36,9 @@ class MLPEstimator(tf.estimator.DNNLinearCombinedClassifier):
                  dnn_dropout=dnn_dropout,
                  n_classes=2,
                  weight_column=weight_column,
-                 label_vocabulary=None,
                  config=config,
                  warm_start_from=warm_start_from,
-                 loss_reduction=tf.losses.Reduction.MEAN,
                  batch_norm=batch_norm,
-                 linear_sparse_combiner="sum",
         )
         logging.info(
             "[%s] MLPEstimator init" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())

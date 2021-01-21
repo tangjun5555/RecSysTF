@@ -29,7 +29,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                  dense_network_dropout_rate=None,
                  dense_network_use_bn=False,
 
-                 optimizer_name="Adam",
+                 optimizer_name="SGD",
                  learning_rate=0.01,
                  ):
 
@@ -85,8 +85,8 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
             if dense_network_hidden_units and cross_network_layer_size:
                 deep_out = compute_dense_out(net)
                 cross_out = compute_cross_out(net)
-                stack_out = tf.concat([deep_out, cross_out], axis=1)
-                logits = tf.layers.dense(stack_out, 1, activation=None, use_bias=True)
+                concat_out = tf.concat([deep_out, cross_out], axis=1)
+                logits = tf.layers.dense(concat_out, 1, activation=None, use_bias=True)
             # Only Deep
             elif dense_network_hidden_units:
                 deep_out = compute_dense_out(net)
