@@ -2,6 +2,7 @@
 # author: tangj 1844250138@qq.com
 # time: 2020/12/10 3:47 下午
 # desc:
+# Reference: Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate
 
 import logging
 import tensorflow as tf
