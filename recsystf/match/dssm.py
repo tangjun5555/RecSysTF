@@ -2,6 +2,7 @@
 # author: tangj 1844250138@qq.com
 # time: 2020/12/10 3:47 下午
 # desc:
+# TODO: 增加pairwise loss损失函数
 
 import time
 import tensorflow as tf
