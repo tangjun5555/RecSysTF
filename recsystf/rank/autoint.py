@@ -84,52 +84,67 @@ class AutoIntEstimator(tf.estimator.Estimator):
                  learning_rate=0.01,
                  ):
         def custom_model_fn(features, labels, mode, params=None, config=None):
-            category_fea_value = tf.feature_column.input_layer(
-                features=features,
-                feature_columns=category_feature_columns,
-            )
-            category_fea_field_num = len(category_feature_columns)
-            category_fea_value = tf.reshape(
-                tensor=category_fea_value,
-                shape=(-1, category_fea_field_num, embedding_size),
-            )
-            logging.info(
-                "AutoIntEstimator custom_model_fn, category_fea_value.shape:%s" %
-                (
-                    category_fea_value.shape
+            if category_feature_columns:
+                category_fea_value = tf.feature_column.input_layer(
+                    features=features,
+                    feature_columns=category_feature_columns,
                 )
-            )
+                category_fea_field_num = len(category_feature_columns)
+                category_fea_value = tf.reshape(
+                    tensor=category_fea_value,
+                    shape=(-1, category_fea_field_num, embedding_size),
+                )
+                logging.info(
+                    "AutoIntEstimator custom_model_fn, category_fea_value.shape:%s" %
+                    (
+                        category_fea_value.shape
+                    )
+                )
+            else:
+                category_fea_field_num = 0
+                category_fea_value = None
 
-            numeric_fea_value = tf.feature_column.input_layer(
-                features=features,
-                feature_columns=numeric_feature_columns,
-            )
-            numeric_fea_field_num = numeric_fea_value.get_shape().as_list()[1]
-            numeric_fea_value = tf.reshape(
-                tensor=numeric_fea_value,
-                shape=(-1, numeric_fea_field_num, 1),
-            )
-            logging.info(
-                "AutoIntEstimator custom_model_fn, numeric_fea_value.shape:%s" %
-                (
-                    numeric_fea_value.shape
+            if numeric_feature_columns:
+                numeric_fea_value = tf.feature_column.input_layer(
+                    features=features,
+                    feature_columns=numeric_feature_columns,
                 )
-            )
-            numeric_fea_embedding = get_embedding_variable(
-                scope="feature",
-                name="numeric_fea_embedding",
-                vocab_size=numeric_fea_field_num,
-                embed_size=embedding_size,
-            )
-            numeric_fea_value = tf.multiply(numeric_fea_value, numeric_fea_embedding)
-            logging.info(
-                "AutoIntEstimator custom_model_fn, numeric_fea_value.shape:%s" %
-                (
-                    numeric_fea_value.shape
+                numeric_fea_field_num = numeric_fea_value.get_shape().as_list()[1]
+                numeric_fea_value = tf.reshape(
+                    tensor=numeric_fea_value,
+                    shape=(-1, numeric_fea_field_num, 1),
                 )
-            )
+                logging.info(
+                    "AutoIntEstimator custom_model_fn, numeric_fea_value.shape:%s" %
+                    (
+                        numeric_fea_value.shape
+                    )
+                )
+                numeric_fea_embedding = get_embedding_variable(
+                    scope="feature",
+                    name="numeric_fea_embedding",
+                    vocab_size=numeric_fea_field_num,
+                    embed_size=embedding_size,
+                )
+                numeric_fea_value = tf.multiply(numeric_fea_value, numeric_fea_embedding)
+                logging.info(
+                    "AutoIntEstimator custom_model_fn, numeric_fea_value.shape:%s" %
+                    (
+                        numeric_fea_value.shape
+                    )
+                )
+            else:
+                numeric_fea_field_num = 0
+                numeric_fea_value = None
 
-            attention_input = tf.concat([category_fea_value, numeric_fea_value], axis=1)
+            if category_fea_value and numeric_fea_value:
+                attention_input = tf.concat([category_fea_value, numeric_fea_value], axis=1)
+            elif category_fea_value:
+                attention_input = category_fea_value
+            elif numeric_fea_value:
+                attention_input = numeric_fea_value
+            else:
+                raise Exception("attention_input is empty.")
             logging.info(
                 "AutoIntEstimator custom_model_fn, attention_input.shape:%s" %
                 (
@@ -198,11 +213,8 @@ class AutoIntEstimator(tf.estimator.Estimator):
                 )
 
             assert mode == tf.estimator.ModeKeys.TRAIN
-            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate, )
-            train_op = optimizer_instance.minimize(
-                loss,
-                global_step=tf.train.get_global_step(),
-            )
+            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate)
+            train_op = optimizer_instance.minimize(loss, global_step=tf.train.get_global_step())
             return tf.estimator.EstimatorSpec(
                 mode=mode,
                 loss=loss,

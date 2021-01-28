@@ -41,7 +41,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                     net.shape
                 )
             )
-            net_dim = int(net.shape[1])
+            net_dim = net.get_shape().as_list()[-1]
 
             def compute_dense_out(input_value):
                 dense_dnn = DNN(
@@ -84,8 +84,26 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
             # Deep & Cross
             if dense_network_hidden_units and cross_network_layer_size:
                 deep_out = compute_dense_out(net)
+                logging.info(
+                    "DeepAndCrossNetworkEstimator custom_model_fn, deep_out.shape:%s" %
+                    (
+                        str(deep_out.shape)
+                    )
+                )
                 cross_out = compute_cross_out(net)
+                logging.info(
+                    "DeepAndCrossNetworkEstimator custom_model_fn, cross_out.shape:%s" %
+                    (
+                        str(cross_out.shape)
+                    )
+                )
                 concat_out = tf.concat([deep_out, cross_out], axis=1)
+                logging.info(
+                    "DeepAndCrossNetworkEstimator custom_model_fn, concat_out.shape:%s" %
+                    (
+                        str(concat_out.shape)
+                    )
+                )
                 logits = tf.layers.dense(concat_out, 1, activation=None, use_bias=True)
             # Only Deep
             elif dense_network_hidden_units:
@@ -97,15 +115,10 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 logits = tf.layers.dense(cross_out, 1, activation=None, use_bias=True)
             else:
                 raise NotImplementedError
-            logits = tf.reshape(logits, (-1,))
-            logging.info(
-                "DeepAndCrossNetworkEstimator custom_model_fn, logits.shape:%s" %
-                (
-                    logits.shape
-                )
-            )
 
+            logits = tf.reshape(logits, (-1,))
             predictions = tf.sigmoid(logits)
+
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(
                     mode=mode,
@@ -135,11 +148,8 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 )
 
             assert mode == tf.estimator.ModeKeys.TRAIN
-            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate, )
-            train_op = optimizer_instance.minimize(
-                loss,
-                global_step=tf.train.get_global_step(),
-            )
+            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate)
+            train_op = optimizer_instance.minimize(loss, global_step=tf.train.get_global_step())
             return tf.estimator.EstimatorSpec(
                 mode=mode,
                 loss=loss,
