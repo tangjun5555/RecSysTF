@@ -137,11 +137,11 @@ class AutoIntEstimator(tf.estimator.Estimator):
                 numeric_fea_field_num = 0
                 numeric_fea_value = None
 
-            if category_fea_value and numeric_fea_value:
+            if category_fea_value is not None and numeric_fea_value is not None:
                 attention_input = tf.concat([category_fea_value, numeric_fea_value], axis=1)
-            elif category_fea_value:
+            elif category_fea_value is not None:
                 attention_input = category_fea_value
-            elif numeric_fea_value:
+            elif numeric_fea_value is not None:
                 attention_input = numeric_fea_value
             else:
                 raise Exception("attention_input is empty.")
