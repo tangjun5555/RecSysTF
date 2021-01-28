@@ -21,7 +21,7 @@ def multihead_attention(queries,
                         has_residual=True,
                         ):
     if num_units is None:
-        num_units = queries.get_shape().as_list[-1]
+        num_units = queries.get_shape().as_list()[-1]
 
     # Linear projections
     Q = tf.layers.dense(queries, num_units, activation=tf.nn.relu)
