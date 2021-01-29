@@ -89,7 +89,7 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
                     query_embed = tf.reshape(query_embed, [-1, query_embed.get_shape().as_list()[-1]])
 
                     seq = features[column.seq_name]
-                    seq_embed = tf.nn.embedding_lookup(embedding_variable, features[seq])
+                    seq_embed = tf.nn.embedding_lookup(embedding_variable, seq)
 
                     seq_zeros = tf.zeros_like(seq)
                     seq_ones = tf.ones_like(seq)
