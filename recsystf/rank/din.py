@@ -3,9 +3,9 @@
 # time: 2020/12/10 3:47 下午
 # desc:
 
-import time
 from collections import namedtuple
 from typing import List
+import logging
 import tensorflow as tf
 from recsystf.layers.dnn import DNN
 from recsystf.utils.variable_util import get_embedding_variable
@@ -71,20 +71,14 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
                  att_feature_columns: List[AttentionSequenceFeature] = None,
                  dnn_feature_columns=None,
 
-                 dnn_hidden_units=None,
+                 dnn_hidden_units=(300, 200, 100),
 
                  optimizer_name="Adam",
                  learning_rate=0.01,
                  ):
         def custom_model_fn(features, labels, mode, params=None, config=None):
             net = tf.feature_column.input_layer(features, feature_columns=dnn_feature_columns)
-            tf.logging.info(
-                "%s DeepInterestNetworkEstimator custom_model_fn, net.shape:%s" %
-                (
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                    net.shape
-                )
-            )
+            logging.info("DeepInterestNetworkEstimator custom_model_fn, net.shape:%s" % (str(net.shape)))
 
             if att_feature_columns:
                 att_net = [net]
@@ -104,25 +98,13 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
 
                     att_net.append(attention("attention_" + column.group_name, query_embed, seq_embed, keys_length))
                 net = tf.concat(att_net, axis=1)
-                tf.logging.info(
-                    "%s DeepInterestNetworkEstimator custom_model_fn, net.shape:%s" %
-                    (
-                        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                        net.shape
-                    )
-                )
+                logging.info("DeepInterestNetworkEstimator custom_model_fn, net.shape:%s" % (str(net.shape)))
 
             output_dnn = DNN(name="output_dnn", hidden_units=dnn_hidden_units, activation=tf.nn.sigmoid, use_bias=True)
             logits = output_dnn(net)
             logits = tf.layers.dense(logits, 1, use_bias=False)
             logits = tf.reshape(logits, (-1,))
-            tf.logging.info(
-                "%s DeepInterestNetworkEstimator custom_model_fn, logits.shape:%s" %
-                (
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                    logits.shape
-                )
-            )
+            logging.info("DeepInterestNetworkEstimator custom_model_fn, logits.shape:%s" % (str(logits.shape)))
 
             predictions = tf.sigmoid(logits)
             if mode == tf.estimator.ModeKeys.PREDICT:
@@ -154,11 +136,8 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
                 )
 
             assert mode == tf.estimator.ModeKeys.TRAIN
-            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate, )
-            train_op = optimizer_instance.minimize(
-                loss,
-                global_step=tf.train.get_global_step(),
-            )
+            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate)
+            train_op = optimizer_instance.minimize(loss, global_step=tf.train.get_global_step())
             return tf.estimator.EstimatorSpec(
                 mode=mode,
                 loss=loss,
@@ -173,6 +152,4 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
             params=None,
             warm_start_from=warm_start_from,
         )
-        tf.logging.info(
-            "[%s] DeepInterestNetworkEstimator init" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        )
+        logging.info("DeepInterestNetworkEstimator init")
