@@ -54,6 +54,12 @@ class MLPEstimator(tf.estimator.Estimator):
             logits = tf.reshape(logits, (-1,))
             predictions = tf.sigmoid(logits)
 
+            if mode == tf.estimator.ModeKeys.PREDICT:
+                return tf.estimator.EstimatorSpec(
+                    mode=mode,
+                    predictions={"predictions": predictions},
+                )
+
             if weight_column:
                 loss = tf.losses.log_loss(
                     labels=tf.cast(labels, tf.float32),
