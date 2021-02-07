@@ -12,17 +12,24 @@ if tf.__version__ >= "2.0":
 
 def get_embedding_variable(scope, name, vocab_size, embed_size):
     """
-    获取embedding矩阵变量，便于共享
+    获取embedding矩阵变量
     :param scope:
     :param name:
     :param vocab_size:
     :param embed_size:
     :return:
     """
+    return get_normal_variable(scope, name, (vocab_size, embed_size))
+
+
+def get_normal_variable(scope, name, shape):
+    """
+    获取矩阵变量，便于共享
+    """
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
-        embedding_variable = tf.get_variable(
+        variable = tf.get_variable(
             name=name,
-            initializer=tf.truncated_normal([vocab_size, embed_size], stddev=1.0 / math.sqrt(embed_size)),
+            initializer=tf.truncated_normal(shape=shape, stddev=1.0 / math.sqrt(shape[-1])),
             dtype=tf.float32,
         )
-    return embedding_variable
+    return variable
