@@ -37,9 +37,14 @@ class DNN(object):
 
     def __call__(self, deep_fea):
         hidden_units = [deep_fea.get_shape().as_list()[-1]] + self.hidden_units
-        self.kernels = [get_normal_variable("dnn_kernels", self.name, (hidden_units[i], hidden_units[i + 1]))
-                        for i in range(len(self.hidden_units))]
-        self.biases = [get_normal_variable("dnn_biases", self.name, (v,)) for v in self.hidden_units]
+        self.kernels = [
+            get_normal_variable("dnn_kernels", self.name + "_" + str(i), (hidden_units[i], hidden_units[i + 1]))
+            for i in range(len(self.hidden_units))
+        ]
+        self.biases = [
+            get_normal_variable("dnn_biases", self.name + "_" + str(i), (self.hidden_units[i],))
+            for i in range(len(self.hidden_units))
+        ]
         for i, unit in enumerate(self.hidden_units):
             # deep_fea = tf.layers.dense(
             #     inputs=deep_fea,
