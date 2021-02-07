@@ -5,6 +5,7 @@
 
 import tensorflow as tf
 from collections import namedtuple
+from recsystf.utils.variable_util import get_normal_variable
 
 if tf.__version__ >= "2.0":
     tf = tf.compat.v1
@@ -35,12 +36,20 @@ class DNN(object):
         self.is_training = is_training
 
     def __call__(self, deep_fea):
+        hidden_units = [deep_fea.get_shape().as_list()[-1]] + self.hidden_units
+        self.kernels = [get_normal_variable("dnn_kernels", self.name, (hidden_units[i], hidden_units[i + 1]))
+                        for i in range(len(self.hidden_units))]
+        self.biases = [get_normal_variable("dnn_biases", self.name, (v,)) for v in self.hidden_units]
         for i, unit in enumerate(self.hidden_units):
-            deep_fea = tf.layers.dense(
-                inputs=deep_fea,
-                units=unit,
-                use_bias=self.use_bias,
-                name="%s/dnn_%d" % (self.name, i),
+            # deep_fea = tf.layers.dense(
+            #     inputs=deep_fea,
+            #     units=unit,
+            #     use_bias=self.use_bias,
+            #     name="%s/dnn_%d" % (self.name, i),
+            # )
+            deep_fea = tf.nn.bias_add(
+                value=tf.tensordot(deep_fea, self.kernels[i], axes=(-1, 0)),
+                bias=self.biases[i],
             )
 
             if self.use_bn:
