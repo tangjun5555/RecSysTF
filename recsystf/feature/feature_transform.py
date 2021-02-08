@@ -37,8 +37,9 @@ def embedding_feature_to_vector(scope, feature_values, feature_config: Embedding
         (feature_config.feature_name, embedding_value.shape)
     )
     if feature_config.pooling == "mean":
+        real_keys_length = tf.where(tf.equal(keys_length, 0), tf.ones_like(keys_length), keys_length)
         return tf.div(x=tf.reduce_sum(embedding_value, axis=1, keepdims=False),
-                      y=tf.cast(tf.expand_dims(keys_length, axis=-1), tf.dtypes.float32),
+                      y=tf.cast(tf.expand_dims(real_keys_length, axis=-1), tf.dtypes.float32),
                       )
     elif feature_config.pooling == "sum":
         return tf.reduce_sum(embedding_value, axis=1, keepdims=False)
