@@ -37,7 +37,9 @@ def embedding_feature_to_vector(scope, feature_values, feature_config: Embedding
         (feature_config.feature_name, embedding_value.shape)
     )
     if feature_config.pooling == "mean":
-        return tf.reduce_mean(embedding_value, axis=1, keepdims=False)
+        return tf.div(x=tf.reduce_sum(embedding_value, axis=1, keepdims=False),
+                      y=tf.cast(tf.expand_dims(keys_length, axis=-1), tf.dtypes.float32),
+                      )
     elif feature_config.pooling == "sum":
         return tf.reduce_sum(embedding_value, axis=1, keepdims=False)
     elif feature_config.pooling == "max":
