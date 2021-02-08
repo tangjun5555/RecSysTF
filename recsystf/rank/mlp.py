@@ -40,7 +40,7 @@ class MLPEstimator(tf.estimator.Estimator):
                 net.append(tf.feature_column.input_layer(features, feature_columns=feature_columns))
             if embedding_columns:
                 for column_config in embedding_columns:
-                    net.append(embedding_feature_to_vector("feature", features[column_config.name], column_config))
+                    net.append(embedding_feature_to_vector("feature", features[column_config.feature_name], column_config))
             net = tf.concat(net, axis=1)
             logging.info(
                 "MLPEstimator custom_model_fn, net.shape:%s" %

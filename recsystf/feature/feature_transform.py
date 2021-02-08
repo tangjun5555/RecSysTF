@@ -13,16 +13,16 @@ if tf.__version__ >= "2.0":
 
 
 def embedding_feature_to_vector(scope, feature_values, feature_config: EmbeddingFeature):
-    embedding_matrix = get_embedding_variable(scope, feature_config.name, feature_config.vocab_size,
+    embedding_matrix = get_embedding_variable(scope, feature_config.embedding_name, feature_config.vocab_size,
                                               feature_config.embedding_size)
     embedding_value = tf.nn.embedding_lookup(embedding_matrix, feature_values)
     logging.info(
         "embedding_feature_to_vector, %s embedding_matrix.shape:%s" %
-        (feature_config.name, embedding_matrix.shape)
+        (feature_config.feature_name, embedding_matrix.shape)
     )
     logging.info(
         "embedding_feature_to_vector, %s embedding_value.shape:%s" %
-        (feature_config.name, embedding_value.shape)
+        (feature_config.feature_name, embedding_value.shape)
     )
     if feature_config.pooling == "mean":
         return tf.reduce_mean(embedding_value, axis=1, keepdims=False)
@@ -31,4 +31,4 @@ def embedding_feature_to_vector(scope, feature_values, feature_config: Embedding
     elif feature_config.pooling == "max":
         return tf.reduce_max(embedding_value, axis=1, keepdims=False)
     else:
-        raise Exception("embedding_feature_to_vector, feature:%s pooling isn't supported" % feature_config.name)
+        raise Exception("embedding_feature_to_vector, feature:%s pooling isn't supported" % feature_config.feature_name)
