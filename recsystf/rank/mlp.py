@@ -4,8 +4,11 @@
 # desc:
 
 import logging
+from typing import List
 import tensorflow as tf
 from recsystf.layers.dnn import DNN
+from recsystf.feature.feature_type import EmbeddingFeature
+from recsystf.feature.feature_transform import embedding_feature_to_vector
 from tensorflow.python.estimator.canned import optimizers
 
 if tf.__version__ >= "2.0":
@@ -21,6 +24,7 @@ class MLPEstimator(tf.estimator.Estimator):
 
                  weight_column=None,
                  feature_columns=None,
+                 embedding_columns: List[EmbeddingFeature] = None,
 
                  hidden_units=(300, 200, 100),
                  activation_fn=tf.nn.relu,
@@ -31,7 +35,13 @@ class MLPEstimator(tf.estimator.Estimator):
                  learning_rate=0.01,
                  ):
         def custom_model_fn(features, labels, mode, params, config=None):
-            net = tf.feature_column.input_layer(features, feature_columns=feature_columns)
+            net = []
+            if feature_columns:
+                net.append(tf.feature_column.input_layer(features, feature_columns=feature_columns))
+            if embedding_columns:
+                for column_config in embedding_columns:
+                    net.append(embedding_feature_to_vector("feature", features[column_config.name], column_config))
+            net = tf.concat(net, axis=1)
             logging.info(
                 "MLPEstimator custom_model_fn, net.shape:%s" %
                 (
@@ -100,37 +110,3 @@ class MLPEstimator(tf.estimator.Estimator):
             warm_start_from=warm_start_from,
         )
         logging.info("MLPEstimator init")
-
-
-# class MLPEstimator(tf.estimator.DNNLinearCombinedClassifier):
-#     def __init__(self,
-#                  model_dir=None,
-#                  config=None,
-#                  warm_start_from=None,
-#
-#                  weight_column=None,
-#
-#                  dnn_feature_columns=None,
-#                  dnn_optimizer="SGD",
-#                  dnn_hidden_units=None,
-#                  dnn_activation_fn=tf.nn.relu,
-#                  dnn_dropout=None,
-#
-#                  batch_norm=False,
-#                  ):
-#         super().__init__(
-#                  model_dir=model_dir,
-#                  dnn_feature_columns=dnn_feature_columns,
-#                  dnn_optimizer=dnn_optimizer,
-#                  dnn_hidden_units=dnn_hidden_units,
-#                  dnn_activation_fn=dnn_activation_fn,
-#                  dnn_dropout=dnn_dropout,
-#                  n_classes=2,
-#                  weight_column=weight_column,
-#                  config=config,
-#                  warm_start_from=warm_start_from,
-#                  batch_norm=batch_norm,
-#         )
-#         logging.info(
-#             "[%s] MLPEstimator init" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-#         )
