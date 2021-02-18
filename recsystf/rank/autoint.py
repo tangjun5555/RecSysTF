@@ -154,21 +154,13 @@ class AutoIntEstimator(tf.estimator.Estimator):
                 numeric_fea_value = None
 
             attention_input = []
-            if embedding_fea_value:
+            if embedding_fea_value is not None:
                 attention_input.append(embedding_fea_value)
-            if category_fea_value:
+            if category_fea_value is not None:
                 attention_input.append(category_fea_value)
-            if numeric_fea_value:
+            if numeric_fea_value is not None:
                 attention_input.append(numeric_fea_value)
             attention_input = tf.concat(attention_input, axis=1)
-            # if category_fea_value is not None and numeric_fea_value is not None:
-            #     attention_input = tf.concat([category_fea_value, numeric_fea_value], axis=1)
-            # elif category_fea_value is not None:
-            #     attention_input = category_fea_value
-            # elif numeric_fea_value is not None:
-            #     attention_input = numeric_fea_value
-            # else:
-            #     raise Exception("attention_input is empty.")
             logging.info(
                 "AutoIntEstimator custom_model_fn, attention_input.shape:%s" %
                 (
