@@ -5,8 +5,11 @@
 # Reference: AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks
 
 import logging
+from typing import List
 import tensorflow as tf
 from recsystf.utils.variable_util import get_embedding_variable
+from recsystf.feature.feature_type import EmbeddingFeature
+from recsystf.feature.feature_transform import embedding_feature_to_vector
 from tensorflow.python.estimator.canned import optimizers
 
 if tf.__version__ >= "2.0":
@@ -73,6 +76,7 @@ class AutoIntEstimator(tf.estimator.Estimator):
                  warm_start_from=None,
 
                  weight_column=None,
+                 embedding_columns: List[EmbeddingFeature] = None,
                  category_feature_columns=None,
                  numeric_feature_columns=None,
 
@@ -84,12 +88,23 @@ class AutoIntEstimator(tf.estimator.Estimator):
                  learning_rate=0.01,
                  ):
         def custom_model_fn(features, labels, mode, params=None, config=None):
+            if embedding_columns:
+                embedding_fea_field_num = len(embedding_columns)
+                embedding_fea_value = []
+                for column_config in embedding_columns:
+                    embedding_columns.append(
+                        embedding_feature_to_vector("feature", features[column_config.feature_name], column_config))
+                embedding_fea_value = tf.stack(values=embedding_fea_value, axis=1)
+            else:
+                embedding_fea_field_num = 0
+                embedding_fea_value = None
+
             if category_feature_columns:
+                category_fea_field_num = len(category_feature_columns)
                 category_fea_value = tf.feature_column.input_layer(
                     features=features,
                     feature_columns=category_feature_columns,
                 )
-                category_fea_field_num = len(category_feature_columns)
                 category_fea_value = tf.reshape(
                     tensor=category_fea_value,
                     shape=(-1, category_fea_field_num, embedding_size),
@@ -137,14 +152,22 @@ class AutoIntEstimator(tf.estimator.Estimator):
                 numeric_fea_field_num = 0
                 numeric_fea_value = None
 
-            if category_fea_value is not None and numeric_fea_value is not None:
-                attention_input = tf.concat([category_fea_value, numeric_fea_value], axis=1)
-            elif category_fea_value is not None:
-                attention_input = category_fea_value
-            elif numeric_fea_value is not None:
-                attention_input = numeric_fea_value
-            else:
-                raise Exception("attention_input is empty.")
+            attention_input = []
+            if embedding_fea_value:
+                attention_input.append(embedding_fea_value)
+            if category_fea_value:
+                attention_input.append(category_fea_value)
+            if numeric_fea_value:
+                attention_input.append(numeric_fea_value)
+            attention_input = tf.concat(attention_input, axis=1)
+            # if category_fea_value is not None and numeric_fea_value is not None:
+            #     attention_input = tf.concat([category_fea_value, numeric_fea_value], axis=1)
+            # elif category_fea_value is not None:
+            #     attention_input = category_fea_value
+            # elif numeric_fea_value is not None:
+            #     attention_input = numeric_fea_value
+            # else:
+            #     raise Exception("attention_input is empty.")
             logging.info(
                 "AutoIntEstimator custom_model_fn, attention_input.shape:%s" %
                 (
@@ -165,7 +188,7 @@ class AutoIntEstimator(tf.estimator.Estimator):
                 )
             attention_output = tf.reshape(
                 tensor=attention_input,
-                shape=(-1, (category_fea_field_num + numeric_fea_field_num) * embedding_size),
+                shape=(-1, (embedding_fea_field_num + category_fea_field_num + numeric_fea_field_num) * embedding_size),
             )
             logging.info(
                 "AutoIntEstimator custom_model_fn, attention_output.shape:%s" %
