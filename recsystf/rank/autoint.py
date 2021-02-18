@@ -92,8 +92,9 @@ class AutoIntEstimator(tf.estimator.Estimator):
                 embedding_fea_field_num = len(embedding_columns)
                 embedding_fea_value = []
                 for column_config in embedding_columns:
-                    embedding_columns.append(
-                        embedding_feature_to_vector("feature", features[column_config.feature_name], column_config))
+                    embedding_fea_value.append(
+                        embedding_feature_to_vector("feature", features[column_config.feature_name], column_config)
+                    )
                 embedding_fea_value = tf.stack(values=embedding_fea_value, axis=1)
             else:
                 embedding_fea_field_num = 0

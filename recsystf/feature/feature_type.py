@@ -6,7 +6,7 @@
 from collections import namedtuple
 
 EmbeddingFeature = namedtuple(
-    typename="SequenceFeature",
+    typename="EmbeddingFeature",
     field_names=["feature_name", "embedding_name",
                  "vocab_size", "embedding_size",
                  "pooling",
