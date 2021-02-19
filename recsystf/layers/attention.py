@@ -41,10 +41,14 @@ def scaled_dot_product_attention_function(query_embed, seq_embed):
 
     query_embed = tf.tile(query_embed, [1, seq_max_length])
     query_embed = tf.reshape(query_embed, [-1, seq_max_length, embed_size])
-
     attention_score = tf.multiply(seq_embed, query_embed)
     attention_score = tf.reduce_sum(attention_score, axis=2, keepdims=False)
+    # attention_score = tf.matmul(a=query_embed, b=seq_embed, transpose_b=True)
     attention_score = attention_score / math.sqrt(embed_size)
+
+    # # add the mask zero out padding tokens.
+    # if mask is not None:
+    #     attention_score += (mask * -1e9)
 
     return tf.reshape(attention_score, [-1, 1, seq_max_length])
 

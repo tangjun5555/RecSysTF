@@ -32,10 +32,9 @@ def attention(name, query_embed, seq_embed, seq_real_length, attention_dnn_units
     seq_max_length = seq_embed.get_shape().as_list()[1]
     embed_size = seq_embed.get_shape().as_list()[-1]
 
+    # Scoring
     query_embed = tf.tile(query_embed, [1, seq_max_length])
     query_embed = tf.reshape(query_embed, [-1, seq_max_length, embed_size])
-
-    # Scoring
     attention_input = tf.concat([query_embed, seq_embed, query_embed - seq_embed, query_embed * seq_embed], axis=-1)
     attention_dnn = DNN(name=name + "_dnn", hidden_units=attention_dnn_units, activation=tf.nn.sigmoid, use_bias=True)
     attention_output = attention_dnn(attention_input)
