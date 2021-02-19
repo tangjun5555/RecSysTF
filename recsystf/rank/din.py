@@ -35,8 +35,8 @@ def attention(name, query_embed, seq_embed, seq_real_length, attention_dnn_units
     query_embed = tf.tile(query_embed, [1, seq_max_length])
     query_embed = tf.reshape(query_embed, [-1, seq_max_length, embed_size])
 
+    # Scoring
     attention_input = tf.concat([query_embed, seq_embed, query_embed - seq_embed, query_embed * seq_embed], axis=-1)
-
     attention_dnn = DNN(name=name + "_dnn", hidden_units=attention_dnn_units, activation=tf.nn.sigmoid, use_bias=True)
     attention_output = attention_dnn(attention_input)
     attention_output = tf.layers.dense(attention_output, 1, name=name + "_dnn_latest")
@@ -51,6 +51,10 @@ def attention(name, query_embed, seq_embed, seq_real_length, attention_dnn_units
         paddings = tf.zeros_like(attention_output)
     outputs = tf.where(key_masks, attention_output, paddings)
 
+    # Scale
+    outputs = outputs / (embed_size ** 0.5)
+
+    # Activation
     if need_softmax:
         outputs = tf.nn.softmax(outputs)
 
