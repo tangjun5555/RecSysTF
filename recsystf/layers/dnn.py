@@ -36,7 +36,7 @@ class DNN(object):
         self.is_training = is_training
 
     def __call__(self, deep_fea):
-        hidden_units = [deep_fea.get_shape().as_list()[-1]] + self.hidden_units
+        hidden_units = [deep_fea.get_shape().as_list()[-1]] + list(self.hidden_units)
         self.kernels = [
             get_normal_variable("dnn_kernels", self.name + "_" + str(i), (hidden_units[i], hidden_units[i + 1]))
             for i in range(len(self.hidden_units))
