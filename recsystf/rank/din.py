@@ -40,7 +40,7 @@ def attention(name, query_embed, seq_embed, seq_real_length, attention_dnn_units
     attention_input = tf.concat([query_embed, seq_embed, query_embed - seq_embed, query_embed * seq_embed], axis=-1)
     attention_dnn = DNN(name=name + "_dnn", hidden_units=attention_dnn_units, activation=tf.nn.sigmoid, use_bias=True)
     attention_output = attention_dnn(attention_input)
-    attention_output = tf.layers.dense(attention_output, 1, name=name + "_dnn_latest")
+    attention_output = tf.layers.dense(attention_output, 1, name=name + "_dnn_latest", reuse=tf.AUTO_REUSE)
     attention_output = tf.reshape(attention_output, [-1, 1, seq_max_length])
 
     # Mask
