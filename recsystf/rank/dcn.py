@@ -13,6 +13,32 @@ if tf.__version__ >= "2.0":
     tf = tf.compat.v1
 
 
+def cross_interaction(input_value, cross_network_layer_size):
+    input_dim = input_value.get_shape().as_list()[1]
+    kernels = [
+        tf.Variable(
+            initial_value=tf.truncated_normal([input_dim]),
+            trainable=True,
+            name="kernel" + str(i),
+        )
+        for i in range(cross_network_layer_size)
+    ]
+    bias = [
+        tf.Variable(
+            initial_value=tf.zeros([input_dim]),
+            trainable=True,
+            name="bias" + str(i),
+        )
+        for i in range(cross_network_layer_size)
+    ]
+    x_0 = input_value
+    x_l = x_0
+    for i in range(cross_network_layer_size):
+        x_b = tf.tensordot(a=tf.reshape(x_l, [-1, 1, input_dim]), b=kernels[i], axes=1)
+        x_l = x_0 * x_b + bias[i] + x_l
+    return x_l
+
+
 class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
     def __init__(self,
                  model_dir=None,
@@ -41,7 +67,6 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                     net.shape
                 )
             )
-            net_dim = net.get_shape().as_list()[-1]
 
             def compute_dense_out(input_value):
                 dense_dnn = DNN(
@@ -55,32 +80,6 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 )
                 return dense_dnn(input_value)
 
-            def compute_cross_out(input_value):
-                kernels = [
-                    tf.Variable(
-                        initial_value=tf.truncated_normal([net_dim, 1]),
-                        trainable=True,
-                        name="kernel" + str(i),
-                    )
-                    for i in range(cross_network_layer_size)
-                ]
-                bias = [
-                    tf.Variable(
-                        initial_value=tf.zeros([net_dim, 1]),
-                        trainable=True,
-                        name="bias" + str(i),
-                    )
-                    for i in range(cross_network_layer_size)
-                ]
-                x_0 = tf.expand_dims(input_value, axis=2)
-                x_l = x_0
-                for i in range(cross_network_layer_size):
-                    xl_w = tf.tensordot(x_l, kernels[i], axes=(1, 0))
-                    dot_ = tf.matmul(x_0, xl_w)
-                    x_l = dot_ + bias[i] + x_l
-                x_l = tf.squeeze(x_l, axis=2)
-                return x_l
-
             # Deep & Cross
             if dense_network_hidden_units and cross_network_layer_size:
                 deep_out = compute_dense_out(net)
@@ -90,7 +89,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                         str(deep_out.shape)
                     )
                 )
-                cross_out = compute_cross_out(net)
+                cross_out = cross_interaction(net, cross_network_layer_size)
                 logging.info(
                     "DeepAndCrossNetworkEstimator custom_model_fn, cross_out.shape:%s" %
                     (
@@ -111,7 +110,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 logits = tf.layers.dense(deep_out, 1, activation=None, use_bias=True)
             # Only Cross
             elif cross_network_layer_size:
-                cross_out = compute_cross_out(net)
+                cross_out = cross_interaction(net, cross_network_layer_size)
                 logits = tf.layers.dense(cross_out, 1, activation=None, use_bias=True)
             else:
                 raise NotImplementedError
