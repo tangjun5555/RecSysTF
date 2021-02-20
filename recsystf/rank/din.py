@@ -9,6 +9,8 @@ import logging
 import tensorflow as tf
 from recsystf.layers.dnn import DNN
 from recsystf.utils.variable_util import get_embedding_variable
+from recsystf.feature.feature_type import EmbeddingFeature
+from recsystf.feature.feature_transform import embedding_feature_to_vector
 from tensorflow.python.estimator.canned import optimizers
 
 if tf.__version__ >= "2.0":
@@ -71,8 +73,9 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
                  warm_start_from=None,
 
                  weight_column=None,
+                 feature_columns=None,
                  att_feature_columns: List[AttentionSequenceFeature] = None,
-                 dnn_feature_columns=None,
+                 embedding_columns: List[EmbeddingFeature] = None,
 
                  dnn_hidden_units=(300, 200, 100),
 
@@ -80,7 +83,14 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
                  learning_rate=0.01,
                  ):
         def custom_model_fn(features, labels, mode, params=None, config=None):
-            net = tf.feature_column.input_layer(features, feature_columns=dnn_feature_columns)
+            net = []
+            if feature_columns:
+                net.append(tf.feature_column.input_layer(features, feature_columns=feature_columns))
+            if embedding_columns:
+                for column_config in embedding_columns:
+                    net.append(
+                        embedding_feature_to_vector("feature", features[column_config.feature_name], column_config))
+            net = tf.concat(net, axis=1)
             logging.info("DeepInterestNetworkEstimator custom_model_fn, net.shape:%s" % (str(net.shape)))
 
             if att_feature_columns:
