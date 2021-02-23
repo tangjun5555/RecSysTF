@@ -4,6 +4,7 @@
 # desc:
 
 import tensorflow as tf
+from recsystf.utils.variable_util import get_normal_variable
 
 if tf.__version__ >= "2.0":
     tf = tf.compat.v1
@@ -36,6 +37,39 @@ class FMLayer(object):
         return output_value
 
 
+class CrossLayer(object):
+    """
+    The Cross Network part of Deep&Cross Network model, which leans both low and high degree cross feature.
+    """
+
+    def __init__(self, name, cross_network_layer_size):
+        self.name = name
+        self.cross_network_layer_size = cross_network_layer_size
+
+    def __call__(self, input_value):
+        """
+        input_value shape
+          - 2D tensor with shape: ``(batch_size, dim)``
+        output_value shape
+          - 2D tensor with shape: ``(batch_size, dim)``
+        """
+        input_dim = input_value.get_shape().as_list()[1]
+        kernels = [
+            get_normal_variable("CrossLayer", "kernel_" + str(i), [input_dim])
+            for i in range(self.cross_network_layer_size)
+        ]
+        bias = [
+            get_normal_variable("CrossLayer", "bias_" + str(i), [input_dim])
+            for i in range(self.cross_network_layer_size)
+        ]
+        x_0 = input_value
+        x_l = x_0
+        for i in range(self.cross_network_layer_size):
+            x_b = tf.tensordot(a=tf.reshape(x_l, [-1, 1, input_dim]), b=kernels[i], axes=1)
+            x_l = x_0 * x_b + bias[i] + x_l
+        return x_l
+
+
 class AFMLayer(object):
     """
     Attentonal Factorization Machine models pairwise (order-2) feature interactions without linear term and bias.
@@ -53,26 +87,3 @@ class AFMLayer(object):
           - 2D tensor with shape: ``(batch_size, 1)``.
         """
         input_value_shape = input_value.get_shape().as_list()
-
-
-class CrossLayer(object):
-    """
-
-    """
-
-    def __init__(self, name):
-        self.name = name
-
-    def __call__(self, input_value):
-        pass
-
-
-class InnerProductLayer(object):
-    """
-
-    """
-    def __init__(self, name):
-        self.name = name
-
-    def __call__(self, input_value):
-        pass
