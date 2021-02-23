@@ -64,10 +64,6 @@ def multihead_attention(queries,
         outputs += V_res
 
     outputs = tf.nn.relu(outputs)
-
-    # # Normalize
-    # outputs = normalize(outputs)
-
     return outputs
 
 
