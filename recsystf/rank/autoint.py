@@ -20,12 +20,10 @@ if tf.__version__ >= "2.0":
 def multihead_attention(queries,
                         keys,
                         values,
-                        num_units=None,
                         num_heads=1,
                         has_residual=True,
                         ):
-    if num_units is None:
-        num_units = queries.get_shape().as_list()[-1]
+    num_units = queries.get_shape().as_list()[-1]
 
     # Linear projections
     Q = tf.layers.dense(queries, num_units, activation=tf.nn.relu)
