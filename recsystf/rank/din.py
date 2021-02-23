@@ -2,6 +2,8 @@
 # author: tangj 1844250138@qq.com
 # time: 2020/12/10 3:47 下午
 # desc:
+# Reference: Deep Interest Network for Click-Through Rate Prediction
+# Core Network Structure：Embedding + Full Connection + Attention
 
 from collections import namedtuple
 from typing import List
