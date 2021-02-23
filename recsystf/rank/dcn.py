@@ -8,35 +8,10 @@ import logging
 import tensorflow as tf
 from tensorflow.python.estimator.canned import optimizers
 from recsystf.layers.dnn import DNN
+from recsystf.layers.interaction import CrossLayer
 
 if tf.__version__ >= "2.0":
     tf = tf.compat.v1
-
-
-def cross_interaction(input_value, cross_network_layer_size):
-    input_dim = input_value.get_shape().as_list()[1]
-    kernels = [
-        tf.Variable(
-            initial_value=tf.truncated_normal([input_dim]),
-            trainable=True,
-            name="kernel" + str(i),
-        )
-        for i in range(cross_network_layer_size)
-    ]
-    bias = [
-        tf.Variable(
-            initial_value=tf.zeros([input_dim]),
-            trainable=True,
-            name="bias" + str(i),
-        )
-        for i in range(cross_network_layer_size)
-    ]
-    x_0 = input_value
-    x_l = x_0
-    for i in range(cross_network_layer_size):
-        x_b = tf.tensordot(a=tf.reshape(x_l, [-1, 1, input_dim]), b=kernels[i], axes=1)
-        x_l = x_0 * x_b + bias[i] + x_l
-    return x_l
 
 
 class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
@@ -67,6 +42,8 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                     net.shape
                 )
             )
+
+            cross_interaction = CrossLayer("cross", cross_network_layer_size)
 
             def compute_dense_out(input_value):
                 dense_dnn = DNN(
