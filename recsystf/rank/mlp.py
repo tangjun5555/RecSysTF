@@ -2,6 +2,7 @@
 # author: tangj 1844250138@qq.com
 # time: 2020/12/10 3:47 下午
 # desc:
+# Core Network Structure：Embedding + Full Connection
 
 import logging
 from typing import List

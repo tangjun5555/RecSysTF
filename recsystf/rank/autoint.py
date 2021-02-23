@@ -3,6 +3,7 @@
 # time: 2021/1/13 12:35 下午
 # desc:
 # Reference: AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks
+# Core Network Structure：Embedding + Multi-Head Self-Attention
 
 import logging
 from typing import List
