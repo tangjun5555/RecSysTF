@@ -93,6 +93,11 @@ class MLPEstimator(tf.estimator.Estimator):
                 )
 
             assert mode == tf.estimator.ModeKeys.TRAIN
+
+            # weight_loss_op = tf.losses.get_regularization_losses()
+            # weight_loss_op = tf.add_n(weight_loss_op)
+            # loss = loss + weight_loss_op
+
             optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate)
             train_op = optimizer_instance.minimize(loss, global_step=tf.train.get_global_step())
             return tf.estimator.EstimatorSpec(

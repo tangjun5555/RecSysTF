@@ -46,12 +46,6 @@ class DNN(object):
             for i in range(len(self.hidden_units))
         ]
         for i, unit in enumerate(self.hidden_units):
-            # deep_fea = tf.layers.dense(
-            #     inputs=deep_fea,
-            #     units=unit,
-            #     use_bias=self.use_bias,
-            #     name="%s/dnn_%d" % (self.name, i),
-            # )
             deep_fea = tf.nn.bias_add(
                 value=tf.tensordot(deep_fea, self.kernels[i], axes=(-1, 0)),
                 bias=self.biases[i],
