@@ -66,7 +66,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                         str(deep_out.shape)
                     )
                 )
-                cross_out = cross_interaction(net, cross_network_layer_size)
+                cross_out = cross_interaction(net)
                 logging.info(
                     "DeepAndCrossNetworkEstimator custom_model_fn, cross_out.shape:%s" %
                     (
@@ -87,7 +87,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 logits = tf.layers.dense(deep_out, 1, activation=None, use_bias=True)
             # Only Cross
             elif cross_network_layer_size:
-                cross_out = cross_interaction(net, cross_network_layer_size)
+                cross_out = cross_interaction(net)
                 logits = tf.layers.dense(cross_out, 1, activation=None, use_bias=True)
             else:
                 raise NotImplementedError
