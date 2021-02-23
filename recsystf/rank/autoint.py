@@ -23,6 +23,13 @@ def multihead_attention(queries,
                         num_heads=1,
                         has_residual=True,
                         ):
+    """
+    :param queries: shape [B, T, H]
+    :param keys: shape [B, T, H]
+    :param values: shape [B, T, H]
+    :param num_heads
+    :param has_residual
+    """
     num_units = queries.get_shape().as_list()[-1]
 
     # Linear projections
@@ -45,10 +52,6 @@ def multihead_attention(queries,
 
     # Activation
     weights = tf.nn.softmax(weights)
-
-    # # Dropouts
-    # weights = tf.layers.dropout(weights, rate=1 - dropout_keep_prob,
-    #                             training=tf.convert_to_tensor(is_training))
 
     # Weighted sum
     outputs = tf.matmul(weights, V_)
@@ -86,6 +89,8 @@ class AutoIntEstimator(tf.estimator.Estimator):
                  optimizer_name="SGD",
                  learning_rate=0.01,
                  ):
+        assert embedding_size % att_head_num == 0
+
         def custom_model_fn(features, labels, mode, params=None, config=None):
             if embedding_columns:
                 embedding_fea_field_num = len(embedding_columns)
