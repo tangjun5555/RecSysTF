@@ -111,13 +111,13 @@ class DeepInterestNetworkEstimator(tf.estimator.Estimator):
                     keys_length = tf.where(tf.equal(seq, -1), seq_zeros, seq_ones)
                     keys_length = tf.reduce_sum(keys_length, axis=1, keep_dims=False)
 
-                    att_net.append(attention("attention_" + column.group_name, query_embed, seq_embed, keys_length))
+                    att_net.append(attention("attention_" + column.seq_name, query_embed, seq_embed, keys_length))
                 net = tf.concat(att_net, axis=1)
                 logging.info("DeepInterestNetworkEstimator custom_model_fn, net.shape:%s" % (str(net.shape)))
 
             output_dnn = DNN(name="output_dnn", hidden_units=dnn_hidden_units, activation=tf.nn.sigmoid, use_bias=True)
             logits = output_dnn(net)
-            logits = tf.layers.dense(logits, 1, use_bias=False)
+            logits = tf.layers.dense(logits, 1)
             logits = tf.reshape(logits, (-1,))
             logging.info("DeepInterestNetworkEstimator custom_model_fn, logits.shape:%s" % (str(logits.shape)))
 
