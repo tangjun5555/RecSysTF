@@ -9,7 +9,6 @@ import tensorflow as tf
 if tf.__version__ >= "2.0":
     tf = tf.compat.v1
 
-from tensorflow.python import pywrap_tensorflow
 from tensorflow.python.framework import graph_util
 
 
@@ -19,7 +18,7 @@ def get_all_variable_shape_map_from_ckpt(checkpoint_path):
     :param checkpoint_path:
     :return:
     """
-    reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path)
+    reader = tf.train.NewCheckpointReader(checkpoint_path)
     return reader.get_variable_to_shape_map()
 
 
@@ -30,7 +29,7 @@ def get_tensor_values_from_ckpt(checkpoint_path, tensor_name):
     :param tensor_name:
     :return:
     """
-    reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path)
+    reader = tf.train.NewCheckpointReader(checkpoint_path)
     return list(reader.get_tensor(tensor_name))
 
 
