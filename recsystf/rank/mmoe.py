@@ -2,6 +2,8 @@
 # author: tangj 1844250138@qq.com
 # time: 2020/12/10 3:47 下午
 # desc:
+# Reference: Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts
+# Core Network Structure: Embedding + Full Connection + Mixture-of-Experts + Multi-Gate
 
 import time
 from typing import List
@@ -9,7 +11,7 @@ import tensorflow as tf
 from recsystf.layers.dnn import DNN, DNNConfig
 from tensorflow.python.estimator.canned import optimizers
 
-if tf.__version__ >= '2.0':
+if tf.__version__ >= "2.0":
     tf = tf.compat.v1
 
 
@@ -63,7 +65,8 @@ class MMoEEstimator(tf.estimator.Estimator):
                 gate_output = tf.layers.dense(
                     inputs=net,
                     units=expert_num,
-                    name="gate_%d/dnn" % task_id
+                    name="gate_%d/dnn" % task_id,
+                    reuse=tf.AUTO_REUSE,
                 )
                 gate_output = tf.nn.softmax(gate_output, axis=1)
                 # shape: (batch_size, expert_num, 1)
@@ -82,7 +85,8 @@ class MMoEEstimator(tf.estimator.Estimator):
                 tower_output = tf.layers.dense(
                     inputs=gate_output_list[task_id],
                     units=1,
-                    name="tower_%s/dnn" % task_name
+                    name="tower_%s/dnn" % task_name,
+                    reuse=tf.AUTO_REUSE,
                 )
                 task_logits[task_name] = tower_output
                 task_predictions[task_name + "_predictions"] = tf.nn.sigmoid(tower_output)

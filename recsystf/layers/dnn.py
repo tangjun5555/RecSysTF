@@ -57,6 +57,7 @@ class DNN(object):
                     training=self.is_training,
                     trainable=True,
                     name="%s/dnn_%d/bn" % (self.name, i),
+                    reuse=tf.AUTO_REUSE,
                 )
 
             if self.activation:
