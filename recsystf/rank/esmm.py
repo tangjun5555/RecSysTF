@@ -44,10 +44,6 @@ class ESSMEstimator(tf.estimator.Estimator):
                             dropout_ratio=dnn_dropout, use_bn=dnn_use_bn,
                             is_training=mode == tf.estimator.ModeKeys.TRAIN,
                             )
-            # ctcvr_model = DNN("CTCVR", hidden_units=dnn_hidden_units, activation=dnn_activation_fn,
-            #                   dropout_ratio=dnn_dropout, use_bn=dnn_use_bn,
-            #                   is_training=mode == tf.estimator.ModeKeys.TRAIN,
-            #                   )
 
             ctr_logits = ctr_model(net)
             ctr_logits = tf.layers.dense(ctr_logits, 1, activation=None, use_bias=True)
@@ -59,12 +55,6 @@ class ESSMEstimator(tf.estimator.Estimator):
             cvr_logits = tf.reshape(cvr_logits, (-1,))
             cvr = tf.sigmoid(cvr_logits, name="CVR")
 
-            # ctcvr_logits = ctcvr_model(net)
-            # if dnn_hidden_units[-1] != 1:
-            #     ctcvr_logits = tf.layers.dense(ctcvr_logits, 1)
-            # ctcvr_logits =
-            # ctcvr_logits = tf.reshape(ctcvr_logits, (-1,))
-            # ctcvr = tf.sigmoid(ctcvr_logits, name="CTCVR")
             ctcvr = tf.multiply(ctr, cvr, name="CTCVR")
 
             if mode == tf.estimator.ModeKeys.PREDICT:
