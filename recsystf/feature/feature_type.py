@@ -5,6 +5,11 @@
 
 from collections import namedtuple
 
+RawFeatureConfig = namedtuple(
+    typename="RawFeatureConfig",
+    field_names=["feature_name", "feature_type", "feature_shape", "feature_vocab_size"],
+)
+
 EmbeddingFeature = namedtuple(
     typename="EmbeddingFeature",
     field_names=["feature_name", "embedding_name",
