@@ -8,7 +8,7 @@ import logging
 import tensorflow as tf
 from tensorflow.python.estimator.canned import optimizers
 from recsystf.layers.dnn import DNN
-from recsystf.layers.interaction import CrossLayer
+from recsystf.layers.interaction import DCNCrossLayer
 
 if tf.__version__ >= "2.0":
     tf = tf.compat.v1
@@ -43,7 +43,7 @@ class DeepAndCrossNetworkEstimator(tf.estimator.Estimator):
                 )
             )
 
-            cross_interaction = CrossLayer("cross", cross_network_layer_size)
+            cross_interaction = DCNCrossLayer("cross", cross_network_layer_size)
 
             def compute_dense_out(input_value):
                 dense_dnn = DNN(
