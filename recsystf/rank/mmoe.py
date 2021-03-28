@@ -99,7 +99,7 @@ class MMoEEstimator(tf.estimator.Estimator):
                     reuse=tf.AUTO_REUSE,
                 )
                 task_logits[task_name] = tower_output
-                task_predictions[task_name + "_predictions"] = tf.nn.sigmoid(tower_output)
+                task_predictions[task_name + "_predictions"] = tf.reshape(tf.nn.sigmoid(tower_output), (-1,))
 
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(
