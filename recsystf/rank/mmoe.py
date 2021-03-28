@@ -115,7 +115,7 @@ class MMoEEstimator(tf.estimator.Estimator):
                     predictions=task_predictions[task_name + "_predictions"],
                 )
                 all_loss.append(task_loss)
-                all_auc[task_name] = tf.metrics.auc(
+                all_auc[task_name + "_auc"] = tf.metrics.auc(
                     labels=tf.cast(labels[task_name], tf.float32),
                     predictions=task_predictions[task_name + "_predictions"],
                 )
