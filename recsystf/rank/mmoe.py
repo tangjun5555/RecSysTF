@@ -5,10 +5,12 @@
 # Reference: Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts
 # Core Network Structure: Embedding + Full Connection + Mixture-of-Experts + Multi-Gate
 
-import time
+import logging
 from typing import List
 import tensorflow as tf
 from recsystf.layers.dnn import DNN, DNNConfig
+from recsystf.feature.feature_type import EmbeddingFeature
+from recsystf.feature.feature_transform import embedding_feature_to_vector
 from tensorflow.python.estimator.canned import optimizers
 
 if tf.__version__ >= "2.0":
@@ -22,24 +24,32 @@ class MMoEEstimator(tf.estimator.Estimator):
                  params=None,
                  warm_start_from=None,
 
-                 dnn_feature_columns=None,
+                 feature_columns=None,
+                 embedding_columns: List[EmbeddingFeature] = None,
+
                  task_names=None,
                  export_dnn_configs: List[DNNConfig] = None,
 
-                 optimizer_name="Adam",
+                 optimizer_name="SGD",
                  learning_rate=0.01,
                  ):
         assert 0.0 < learning_rate < 1.0
-        assert dnn_feature_columns and export_dnn_configs and task_names
+        assert (feature_columns or embedding_columns) and export_dnn_configs and task_names
         expert_num = len(export_dnn_configs)
         task_num = len(task_names)
 
         def custom_model_fn(features, labels, mode, params, config=None):
-            net = tf.feature_column.input_layer(features, feature_columns=dnn_feature_columns)
-            tf.logging.info(
-                "%s MMoEEstimator custom_model_fn, net.shape:%s" %
+            net = []
+            if feature_columns:
+                net.append(tf.feature_column.input_layer(features, feature_columns=feature_columns))
+            if embedding_columns:
+                for column_config in embedding_columns:
+                    net.append(
+                        embedding_feature_to_vector("feature", features[column_config.feature_name], column_config))
+            net = tf.concat(net, axis=1)
+            logging.info(
+                "MMoEEstimator custom_model_fn, net.shape:%s" %
                 (
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     net.shape
                 )
             )
@@ -139,7 +149,4 @@ class MMoEEstimator(tf.estimator.Estimator):
             params=params,
             warm_start_from=warm_start_from,
         )
-        tf.logging.info(
-            "[%s] MMoEEstimator:%s init" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                            str(self.__class__.__name__)),
-        )
+        logging.info("MMoEEstimator:%s init" % (str(self.__class__.__name__)))

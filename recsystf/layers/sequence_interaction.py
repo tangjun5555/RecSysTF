@@ -24,4 +24,16 @@ class DINAttentionLayer(object):
         pass
 
 
-# class
+class DIENInterestEvolutionLayer(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __call__(self, input_value):
+        """
+        input_value shape
+            - 3D tensor with shape: ``(batch_size,field_size,embedding_size)``.
+
+        output_value shape
+            - 2D tensor with shape: ``(batch_size, embedding_size)``.
+                """
+        pass
