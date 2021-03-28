@@ -62,7 +62,7 @@ class MMoEEstimator(tf.estimator.Estimator):
                     activation=export_dnn_configs[expert_id].activation,
                     dropout_ratio=export_dnn_configs[expert_id].dropout_ratio,
                     use_bn=export_dnn_configs[expert_id].use_bn,
-                    is_training=export_dnn_configs[expert_id].is_training,
+                    is_training=mode == tf.estimator.ModeKeys.TRAIN,
                 )
                 # shape: (batch_size, hidden_units)
                 export_output = expert_dnn(net)

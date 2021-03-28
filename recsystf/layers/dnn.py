@@ -12,7 +12,7 @@ if tf.__version__ >= "2.0":
 
 DNNConfig = namedtuple(
     typename="DNNConfig",
-    field_names=["name", "hidden_units", "use_bias", "activation", "dropout_ratio", "use_bn", "is_training"],
+    field_names=["name", "hidden_units", "use_bias", "activation", "dropout_ratio", "use_bn"],
 )
 
 
