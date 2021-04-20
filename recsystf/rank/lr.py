@@ -5,13 +5,13 @@
 
 import logging
 import tensorflow as tf
-from tensorflow.python.estimator.canned import optimizers
+from recsystf.rank.rank_model import RankModelEstimator
 
 if tf.__version__ >= "2.0":
     tf = tf.compat.v1
 
 
-class LREstimator(tf.estimator.Estimator):
+class LREstimator(RankModelEstimator):
     def __init__(self,
                  model_dir=None,
                  config=None,
@@ -26,34 +26,24 @@ class LREstimator(tf.estimator.Estimator):
                  ):
         def custom_model_fn(features, labels, mode, params, config=None):
             input_net = features[feature_column]
+
             predictions = tf.layers.dense(
                 inputs=input_net,
                 units=1,
                 use_bias=True,
                 activation=tf.nn.sigmoid,
             )
+            self.add_to_prediction_dict("predictions", predictions)
 
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(
                     mode=mode,
-                    predictions={"predictions": predictions},
+                    predictions=self.get_prediction_dict(),
                 )
 
-            if weight_column:
-                loss = tf.losses.log_loss(
-                    labels=tf.cast(labels, tf.float32),
-                    predictions=predictions,
-                    weights=features[weight_column],
-                )
-            else:
-                loss = tf.losses.log_loss(
-                    labels=tf.cast(labels, tf.float32),
-                    predictions=predictions,
-                )
+            loss = self.build_binary_loss(labels, predictions, 1.0 if not weight_column else features[weight_column])
+            eval_metric_ops = self.build_binary_metric(labels, predictions)
 
-            eval_metric_ops = {
-                "auc": tf.metrics.auc(labels, predictions),
-            }
             if mode == tf.estimator.ModeKeys.EVAL:
                 return tf.estimator.EstimatorSpec(
                     mode=mode,
@@ -63,7 +53,7 @@ class LREstimator(tf.estimator.Estimator):
 
             assert mode == tf.estimator.ModeKeys.TRAIN
 
-            optimizer_instance = optimizers.get_optimizer_instance(optimizer_name, learning_rate=learning_rate)
+            optimizer_instance = self.get_optimizer_instance(optimizer_name, learning_rate)
             train_op = optimizer_instance.minimize(loss, global_step=tf.train.get_global_step())
             return tf.estimator.EstimatorSpec(
                 mode=mode,
