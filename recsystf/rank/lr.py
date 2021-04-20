@@ -41,8 +41,8 @@ class LREstimator(RankModelEstimator):
                     predictions=self.get_prediction_dict(),
                 )
 
-            loss = self.build_binary_loss(labels, predictions, 1.0 if not weight_column else features[weight_column])
-            eval_metric_ops = self.build_binary_metric(labels, predictions)
+            loss = self.build_pointwise_loss(labels, predictions, 1.0 if not weight_column else features[weight_column])
+            eval_metric_ops = self.build_pointwise_metric(labels, predictions)
 
             if mode == tf.estimator.ModeKeys.EVAL:
                 return tf.estimator.EstimatorSpec(
