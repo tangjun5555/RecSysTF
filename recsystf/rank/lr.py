@@ -21,6 +21,8 @@ class LREstimator(RankModelEstimator):
                  weight_column=None,
                  feature_column=None,
 
+                 instance_wise_norm=True,  # TODO
+
                  optimizer_name="SGD",
                  learning_rate=0.01,
                  ):
