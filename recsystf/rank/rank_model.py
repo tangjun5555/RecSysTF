@@ -79,4 +79,4 @@ class RankModelEstimator(tf.estimator.Estimator):
             serving_input_receiver_fn=tf.estimator.export.build_raw_serving_input_receiver_fn(feature_placeholder),
             as_text=True,
         )
-        logging.warning("保存模型到" + export_model_dir.decode())
+        logging.warning("Saved Model To " + export_model_dir.decode())
