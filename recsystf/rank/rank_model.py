@@ -3,6 +3,8 @@
 # time: 2021/4/20 4:04 下午
 # desc:
 
+import os
+import json
 import logging
 import tensorflow as tf
 from tensorflow.python.estimator.canned import optimizers
@@ -20,6 +22,22 @@ class RankModelEstimator(tf.estimator.Estimator):
                  warm_start_from=None,
                  ):
         self._prediction_dict = {}
+        if config is None:
+            config = tf.estimator.RunConfig()
+        # 是否使用ps分布式训练
+        if params["use_ps_distribute"]:
+            # 配置样例
+            # os.environ["TF_CONFIG"] = json.dumps({
+            #     "cluster": {
+            #         "chief": ["127.0.0.1:5000"],  # 调度节点
+            #         "worker": ["127.0.0.1:5001"],  # 计算节点
+            #         "ps": ["127.0.0.1:5002"]  # 参数服务器节点，可不必使用GPU
+            #     },
+            #     "task": {"type": "chief", "index": 0}  # 定义本进程为worker节点，即["127.0.0.1:5002"]为ps节点
+            # })
+            os.environ["TF_CONFIG"] = json.dumps(params.get("TF_CONFIG"))
+            strategy = tf.distribute.experimental.ParameterServerStrategy()
+            config.train_distribute = strategy
         super().__init__(
             model_fn=model_fn,
             model_dir=model_dir,
@@ -54,3 +72,11 @@ class RankModelEstimator(tf.estimator.Estimator):
             opt=optimizer_name,
             learning_rate=learning_rate,
         )
+
+    def saved_model(self, feature_placeholder):
+        export_model_dir = self.export_saved_model(
+            export_dir_base=self.model_dir,
+            serving_input_receiver_fn=tf.estimator.export.build_raw_serving_input_receiver_fn(feature_placeholder),
+            as_text=True,
+        )
+        logging.warning("保存模型到" + export_model_dir.decode())
