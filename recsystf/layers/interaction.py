@@ -56,11 +56,11 @@ class DCNCrossLayer(object):
         """
         input_dim = input_value.get_shape().as_list()[1]
         kernels = [
-            get_normal_variable("%s:CrossLayer" % self.name, "kernel_" + str(i), [input_dim])
+            get_normal_variable("%s_CrossLayer" % self.name, "kernel_" + str(i), [input_dim])
             for i in range(self.cross_network_layer_size)
         ]
         bias = [
-            get_normal_variable("%s:CrossLayer" % self.name, "bias_" + str(i), [input_dim])
+            get_normal_variable("%s_CrossLayer" % self.name, "bias_" + str(i), [input_dim])
             for i in range(self.cross_network_layer_size)
         ]
         x_0 = input_value
@@ -154,12 +154,12 @@ class PNNOuterProductLayer(object):
         num_pairs = int(field_size * (field_size - 1) / 2)
 
         if self.kernel_type == "mat":
-            kernel = get_normal_variable("%s:OuterProductLayer" % self.name, "kernel",
+            kernel = get_normal_variable("%s_OuterProductLayer" % self.name, "kernel",
                                          (embedding_size, num_pairs, embedding_size))
         elif self.kernel_type == "vec":
-            kernel = get_normal_variable("%s:OuterProductLayer" % self.name, "kernel", (num_pairs, embedding_size))
+            kernel = get_normal_variable("%s_OuterProductLayer" % self.name, "kernel", (num_pairs, embedding_size))
         elif self.kernel_type == "num":
-            kernel = get_normal_variable("%s:OuterProductLayer" % self.name, "kernel", (num_pairs, 1))
+            kernel = get_normal_variable("%s_OuterProductLayer" % self.name, "kernel", (num_pairs, 1))
         else:
             raise Exception("OuterProductLayer don't support %s" % self.kernel_type)
         row = []

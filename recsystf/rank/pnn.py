@@ -58,7 +58,7 @@ class PNNEstimator(RankModelEstimator):
             linear_signal = tf.reshape(embedding_fea_value, [-1, len(embedding_columns) * embedding_size])
 
             inner_interaction = PNNInnerProductLayer("inner_interaction")
-            outer_interaction = PNNOuterProductLayer("inner_interaction", outer_kernel_type)
+            outer_interaction = PNNOuterProductLayer("outer_interaction", outer_kernel_type)
 
             if use_inner and use_outer:
                 inner_out = inner_interaction(embedding_fea_value)
@@ -95,6 +95,8 @@ class PNNEstimator(RankModelEstimator):
                     predictions=self.get_prediction_dict(),
                 )
 
+            if len(labels.get_shape().as_list()) == 2:
+                labels = tf.reshape(labels, (-1,))
             loss = self.build_pointwise_loss(labels, predictions, 1.0 if not weight_column else features[weight_column])
             eval_metric_ops = self.build_pointwise_metric(labels, predictions)
 

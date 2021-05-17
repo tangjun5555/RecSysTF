@@ -25,7 +25,7 @@ class RankModelEstimator(tf.estimator.Estimator):
         if config is None:
             config = tf.estimator.RunConfig()
         # 是否使用ps分布式训练
-        if params["use_ps_distribute"]:
+        if params and params.get("use_ps_distribute", False):
             # 配置样例
             # os.environ["TF_CONFIG"] = json.dumps({
             #     "cluster": {
